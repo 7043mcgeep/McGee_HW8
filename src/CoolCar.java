@@ -9,7 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.paint.PhongMaterial;
+import javafx.scene.paint.PhongMaterial; 
 import javafx.scene.shape.Box;
 import javafx.scene.shape.DrawMode;
 import javafx.scene.shape.MeshView;
@@ -75,12 +75,9 @@ public class CoolCar extends Application {
 		brownMat.setDiffuseColor(Color.rgb(76, 36, 0));
 		brownMat.setSpecularColor(Color.rgb(132, 62, 0));
 		
-		Box xAxis = new Box(800, 10, 800);
+		Box xAxis = new Box(1000, 400, 2000);
 		xAxis.setMaterial(greenMaterial);
-//		Box yAxis = new Box(10, 200, 10);
-//		yAxis.setMaterial(greenMaterial); 
-		Box zAxis = new Box(10, 10, 200);
-		zAxis.setMaterial(yelMaterial);
+		xAxis.setTranslateY(190);
 
 		final Sphere sphere = new Sphere(30);
 		sphere.setMaterial(yelMaterial);
@@ -95,48 +92,86 @@ public class CoolCar extends Application {
 		// box.setDrawMode(DrawMode.LINE);
 
 		box.setTranslateX(0);
-		box.setTranslateY(-5);
-		box.setTranslateZ(-20);
+		box.setTranslateY(-10);
+		box.setTranslateZ(-400);
 		
-		float[] points = 
-			{	
-				50, 0, 0,  // v0 (iv0 = 0)
-				45, 10, 0, // v1 (iv1 = 1)
-				55, 10, 0  // v2 (iv2 = 2)
-			};
-		
-		float[] texCoords = 
-			{ 	
-				1.5f, 1.5f, // t0 (it0 = 0)
-				1.0f, 2.0f, // t1 (it1 = 1)
-				2.0f, 2.0f  // t2 (it2 = 2)
-			};
-		
-		int[] faces = 
-			{
-				0, 0, 2, 2, 1, 1, // iv0, it0, iv2, it2, iv1, it1 (front face)
-				0, 0, 1, 1, 2, 2  // iv0, it0, iv1, it1, iv2, it2 back face
-			};
-		
-		// Create a TriangleMesh
-		TriangleMesh mtn = new TriangleMesh();
-		mtn.getPoints().addAll(points);
-		mtn.getTexCoords().addAll(texCoords);
-		mtn.getFaces().addAll(faces);
-		
-		MeshView pyramid = new MeshView(mtn);
-		pyramid.setDrawMode(DrawMode.FILL);
-		pyramid.setMaterial(lbrownMat);
-		pyramid.setTranslateX(0);
-		pyramid.setTranslateY(-40);
-		pyramid.setTranslateZ(0);
-		pyramid.setMesh(mtn);
-		pyramid.setTranslateY(-15);
+		// Example from JavaFX for Dummies
+		TriangleMesh pyramidMesh = new TriangleMesh();
+		// define (a trivial) texture map
+		pyramidMesh.getTexCoords().addAll(0, 0);
+		// define vertices
+		float h = 100;                    // Height
+		float s = 200;                    // Base hypotenuse
+		pyramidMesh.getPoints().addAll(
+		        0,    0,    0,            // Point 0 - Top
+		        0,    h,    -s/2,         // Point 1 - Front
+		        -s/2, h,    0,            // Point 2 - Left
+		        s/2,  h,    0,            // Point 3 - Right
+		        0,    h,    s/2           // Point 4 - Back
+		    );
+		// define faces
+		pyramidMesh.getFaces().addAll(
+		        0,0,  2,0,  1,0,          // Front left face
+		        0,0,  1,0,  3,0,          // Front right face
+		        0,0,  3,0,  4,0,          // Back right face
+		        0,0,  4,0,  2,0,          // Back left face
+		        4,0,  1,0,  2,0,          // Bottom left face
+		        4,0,  3,0,  1,0           // Bottom right face
+		    );
+		pyramidMesh.getFaceSmoothingGroups().addAll(
+				1, 2, 3, 4, 5, 5);
+		MeshView pyramid = new MeshView(pyramidMesh);
+		final PhongMaterial sand_dark = new PhongMaterial();
+		sand_dark.setDiffuseMap(new Image("file:mtn.png"));
+		sand_dark.setSpecularColor(Color.WHITE);
+		pyramid.setMaterial(sand_dark);
+		pyramid.setTranslateX(-50);
+		pyramid.setTranslateY(-100);
+		pyramid.setTranslateZ(200);
+		root.getChildren().add(pyramid);
 		// pyramid.setDrawMode(DrawMode.LINE);
 		
-		root.getChildren().addAll(xAxis, zAxis);
+		// Define a second size of mountain
+		
+		TriangleMesh mtnMesh = new TriangleMesh();
+		// define (a trivial) texture map
+		mtnMesh.getTexCoords().addAll(0, 0);
+		// define vertices
+		float h2 = 50;                    // Height
+		float s2 = 100;                    // Base hypotenuse
+		mtnMesh.getPoints().addAll(
+		        0,    0,    0,            // Point 0 - Top
+		        0,    h2,    -s2/2,         // Point 1 - Front
+		        -s2/2, h2,    0,            // Point 2 - Left
+		        s2/2,  h2,    0,            // Point 3 - Right
+		        0,    h2,    s2/2           // Point 4 - Back
+		    );
+		// define faces
+		mtnMesh.getFaces().addAll(
+		        0,0,  2,0,  1,0,          // Front left face
+		        0,0,  1,0,  3,0,          // Front right face
+		        0,0,  3,0,  4,0,          // Back right face
+		        0,0,  4,0,  2,0,          // Back left face
+		        4,0,  1,0,  2,0,          // Bottom left face
+		        4,0,  3,0,  1,0           // Bottom right face
+		    );
+		mtnMesh.getFaceSmoothingGroups().addAll(
+				1, 2, 3, 4, 5, 5);
+		 
+		MeshView small_mtn = new MeshView(mtnMesh);
+		
+		final PhongMaterial sand_light = new PhongMaterial();
+		sand_light.setDiffuseMap(new Image("file:mtn_sand_light.jpg"));
+		sand_light.setSpecularColor(Color.WHITE);
+		small_mtn.setMaterial(sand_light);
+		small_mtn.setTranslateX(100);
+		small_mtn.setTranslateY(-50);
+		small_mtn.setTranslateZ(200);
+		root.getChildren().addAll(small_mtn);
+		
+		root.getChildren().addAll(xAxis);
 
-		root.getChildren().addAll(sphere, box, pyramid);
+		root.getChildren().addAll(sphere, box);
 
 	}
 
@@ -158,9 +193,9 @@ public class CoolCar extends Application {
 		scene.setCamera(camera);
 		// translations through dolly
 		cameraDolly = new Group();
-		cameraDolly.setTranslateZ(-500);
+		cameraDolly.setTranslateZ(-1000);
 		cameraDolly.setTranslateX(0);
-		cameraDolly.setTranslateY(-10);
+		cameraDolly.setTranslateY(-30);
 		cameraDolly.getChildren().add(camera);
 		sceneRoot.getChildren().add(cameraDolly);
 		// rotation transforms
