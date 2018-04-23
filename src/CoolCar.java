@@ -5,28 +5,36 @@ import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.MeshView;
+import javafx.scene.shape.TriangleMesh;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 /**
- * Simple 3D World
  * 
- * Based on code from JavaFX 8 Introduction by Example
- *   (code written by Sean Phillips)
- * @author mike slattery
+ * @author Patrick J. McGee
+ * 
+ * A 3D rendition of my first 2D assignment.
+ * Pretty sunset included.
+ * + Functional, rotating sun.
+ * + Working headlights (Press 'H').
+ *
  */
-public class World1 extends Application {
+public class CoolCar extends Application {
 
 	private PerspectiveCamera camera;
 	private Group cameraDolly;
 	private final double cameraQuantity = 10.0;
-	private final double sceneWidth = 600;
-	private final double sceneHeight = 600;
+	private final double sceneWidth = 900;
+	private final double sceneHeight = 900;
 
 	private double mousePosX;
 	private double mousePosY;
@@ -34,60 +42,101 @@ public class World1 extends Application {
 	private double mouseOldY;
 	private double mouseDeltaX;
 	private double mouseDeltaY;
+	
+	Image sunset = new Image("file:sunset.jpg");
 
 	private void constructWorld(Group root) {
-		AmbientLight light = new AmbientLight(Color.WHITE);
-		//AmbientLight light = new AmbientLight(Color.rgb(100, 100, 100));
+		//AmbientLight light = new AmbientLight(Color.WHITE);
+		AmbientLight light = new AmbientLight(Color.rgb(153, 153, 153));
 		root.getChildren().add(light);
 
-//		PointLight pl = new PointLight();
-//		pl.setTranslateX(100);
-//		pl.setTranslateY(-100);
-//		pl.setTranslateZ(-100);
-//		root.getChildren().add(pl);
+		PointLight pl = new PointLight();
+		pl.setTranslateX(100);
+		pl.setTranslateY(-100);
+		pl.setTranslateZ(-100);
+		root.getChildren().add(pl);
 
 		final PhongMaterial greenMaterial = new PhongMaterial();
 		greenMaterial.setDiffuseColor(Color.FORESTGREEN);
 		greenMaterial.setSpecularColor(Color.LIMEGREEN);
-		Box xAxis = new Box(500, 10, 10);
-		xAxis.setMaterial(greenMaterial);
-		Box yAxis = new Box(10, 200, 10);
-		yAxis.setMaterial(greenMaterial);
-		Box zAxis = new Box(10, 10, 200);
-		zAxis.setMaterial(greenMaterial);
-
+		final PhongMaterial yelMaterial = new PhongMaterial();
+		yelMaterial.setDiffuseColor(Color.YELLOW);
+		yelMaterial.setSpecularColor(Color.ORANGE);
 		final PhongMaterial redMaterial = new PhongMaterial();
 		redMaterial.setDiffuseColor(Color.RED);
 		redMaterial.setSpecularColor(Color.TOMATO);
-		final Sphere sphere = new Sphere(30);
-		sphere.setMaterial(redMaterial);
-
-		sphere.setTranslateX(150);
-
-		final PhongMaterial yellowMaterial = new PhongMaterial();
-		//yellowMaterial.setDiffuseColor(Color.rgb(200, 200, 0, 0.5));
-		 yellowMaterial.setDiffuseColor(Color.YELLOW);
-		 yellowMaterial.setSpecularColor(Color.WHITE);
-		final Sphere sphere2 = new Sphere(30);
-		sphere2.setMaterial(yellowMaterial);
-		// sphere2.setDrawMode(DrawMode.LINE);
-
-		sphere2.setTranslateX(110);
-
 		final PhongMaterial blueMaterial = new PhongMaterial();
 		blueMaterial.setDiffuseColor(Color.BLUE);
 		blueMaterial.setSpecularColor(Color.WHITE);
-		Box box = new Box(40, 60, 80);
-		box.setMaterial(blueMaterial);
+		final PhongMaterial lbrownMat = new PhongMaterial();
+		lbrownMat.setDiffuseColor(Color.rgb(153, 94, 39));
+		lbrownMat.setSpecularColor(Color.rgb(219, 142, 70));
+		final PhongMaterial brownMat = new PhongMaterial();
+		brownMat.setDiffuseColor(Color.rgb(76, 36, 0));
+		brownMat.setSpecularColor(Color.rgb(132, 62, 0));
+		
+		Box xAxis = new Box(800, 10, 800);
+		xAxis.setMaterial(greenMaterial);
+//		Box yAxis = new Box(10, 200, 10);
+//		yAxis.setMaterial(greenMaterial); 
+		Box zAxis = new Box(10, 10, 200);
+		zAxis.setMaterial(yelMaterial);
+
+		final Sphere sphere = new Sphere(30);
+		sphere.setMaterial(yelMaterial);
+		// sphere.setDrawMode(DrawMode.LINE);
+
+		sphere.setTranslateX(0);
+		sphere.setTranslateY(-210);
+		sphere.setTranslateZ(300);
+
+		Box box = new Box(20, 5, 20);
+		box.setMaterial(redMaterial);
 		// box.setDrawMode(DrawMode.LINE);
 
-		box.setTranslateX(-30);
-		box.setTranslateY(-20);
+		box.setTranslateX(0);
+		box.setTranslateY(-5);
 		box.setTranslateZ(-20);
+		
+		float[] points = 
+			{	
+				50, 0, 0,  // v0 (iv0 = 0)
+				45, 10, 0, // v1 (iv1 = 1)
+				55, 10, 0  // v2 (iv2 = 2)
+			};
+		
+		float[] texCoords = 
+			{ 	
+				1.5f, 1.5f, // t0 (it0 = 0)
+				1.0f, 2.0f, // t1 (it1 = 1)
+				2.0f, 2.0f  // t2 (it2 = 2)
+			};
+		
+		int[] faces = 
+			{
+				0, 0, 2, 2, 1, 1, // iv0, it0, iv2, it2, iv1, it1 (front face)
+				0, 0, 1, 1, 2, 2  // iv0, it0, iv1, it1, iv2, it2 back face
+			};
+		
+		// Create a TriangleMesh
+		TriangleMesh mtn = new TriangleMesh();
+		mtn.getPoints().addAll(points);
+		mtn.getTexCoords().addAll(texCoords);
+		mtn.getFaces().addAll(faces);
+		
+		MeshView pyramid = new MeshView(mtn);
+		pyramid.setDrawMode(DrawMode.FILL);
+		pyramid.setMaterial(lbrownMat);
+		pyramid.setTranslateX(0);
+		pyramid.setTranslateY(-40);
+		pyramid.setTranslateZ(0);
+		pyramid.setMesh(mtn);
+		pyramid.setTranslateY(-15);
+		// pyramid.setDrawMode(DrawMode.LINE);
+		
+		root.getChildren().addAll(xAxis, zAxis);
 
-		root.getChildren().addAll(xAxis, yAxis, zAxis);
-
-		root.getChildren().addAll(sphere2, sphere, box);
+		root.getChildren().addAll(sphere, box, pyramid);
 
 	}
 
@@ -100,15 +149,18 @@ public class World1 extends Application {
 
 		// Fourth parameter to indicate 3D world:
 		Scene scene = new Scene(sceneRoot, sceneWidth, sceneHeight, true);
-		scene.setFill(Color.BLACK);
+		ImagePattern pattern = new ImagePattern(sunset);
+		scene.setFill(pattern);
+		
 		camera = new PerspectiveCamera(true);
 		camera.setNearClip(0.1);
 		camera.setFarClip(10000.0);
 		scene.setCamera(camera);
 		// translations through dolly
 		cameraDolly = new Group();
-		cameraDolly.setTranslateZ(-1000);
-		cameraDolly.setTranslateX(200);
+		cameraDolly.setTranslateZ(-500);
+		cameraDolly.setTranslateX(0);
+		cameraDolly.setTranslateY(-10);
 		cameraDolly.getChildren().add(camera);
 		sceneRoot.getChildren().add(cameraDolly);
 		// rotation transforms
