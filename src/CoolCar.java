@@ -1,7 +1,10 @@
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
 import javafx.scene.Scene;
@@ -12,6 +15,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial; 
 import javafx.scene.shape.Box;
 import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.shape.Sphere;
@@ -44,7 +48,13 @@ public class CoolCar extends Application {
 	private double mouseDeltaY;
 	
 	Image sunset = new Image("file:sunset.jpg");
-
+	Image mtn1 = new Image("file:red.jpg");
+	Image mtn2 = new Image("file:mtn_sand_light.jpg");
+	Image mtn3 = new Image("file:mtn_sand_dark.jpg");
+	Image mtn4 = new Image("file:rock.jpg");
+	Image ground = new Image("file:dirt.jpg");
+	Image sun = new Image("file:sun.png");
+	
 	private void constructWorld(Group root) {
 		//AmbientLight light = new AmbientLight(Color.WHITE);
 		AmbientLight light = new AmbientLight(Color.rgb(153, 153, 153));
@@ -76,32 +86,41 @@ public class CoolCar extends Application {
 		brownMat.setSpecularColor(Color.rgb(132, 62, 0));
 		
 		Box xAxis = new Box(1000, 400, 2000);
-		xAxis.setMaterial(greenMaterial);
+		final PhongMaterial gnd = new PhongMaterial();
+		gnd.setDiffuseMap(ground);
+		gnd.setSpecularColor(Color.WHITE);
+		xAxis.setMaterial(gnd);
 		xAxis.setTranslateY(190);
 
 		final Sphere sphere = new Sphere(30);
-		sphere.setMaterial(yelMaterial);
-		// sphere.setDrawMode(DrawMode.LINE);
-
+		final PhongMaterial sun_mat = new PhongMaterial();
+		sun_mat.setDiffuseMap(sun);
+		sun_mat.setSpecularColor(Color.WHITE);
+		sphere.setMaterial(sun_mat);
 		sphere.setTranslateX(0);
 		sphere.setTranslateY(-210);
 		sphere.setTranslateZ(300);
 
-		Box box = new Box(20, 5, 20);
-		box.setMaterial(redMaterial);
-		// box.setDrawMode(DrawMode.LINE);
+		Box car = new Box(20, 5, 20);
+		car.setMaterial(redMaterial);
 
-		box.setTranslateX(0);
-		box.setTranslateY(-10);
-		box.setTranslateZ(-400);
+		car.setTranslateX(0);
+		car.setTranslateY(-10);
+		car.setTranslateZ(-600);
 		
 		// Example from JavaFX for Dummies
 		TriangleMesh pyramidMesh = new TriangleMesh();
 		// define (a trivial) texture map
-		pyramidMesh.getTexCoords().addAll(0, 0);
+		pyramidMesh.getTexCoords().addAll(
+				0.5f, 0,
+				0, 0.5f,
+				1, 0.5f,
+				0, 1,
+				1, 1
+				);
 		// define vertices
-		float h = 100;                    // Height
-		float s = 200;                    // Base hypotenuse
+		float h = 200;                    // Height
+		float s = 400;                    // Base hypotenuse
 		pyramidMesh.getPoints().addAll(
 		        0,    0,    0,            // Point 0 - Top
 		        0,    h,    -s/2,         // Point 1 - Front
@@ -111,35 +130,52 @@ public class CoolCar extends Application {
 		    );
 		// define faces
 		pyramidMesh.getFaces().addAll(
-		        0,0,  2,0,  1,0,          // Front left face
-		        0,0,  1,0,  3,0,          // Front right face
-		        0,0,  3,0,  4,0,          // Back right face
-		        0,0,  4,0,  2,0,          // Back left face
-		        4,0,  1,0,  2,0,          // Bottom left face
-		        4,0,  3,0,  1,0           // Bottom right face
-		    );
+		        0,0,  2,1,  1,2,          // Front left face
+		        0,0,  1,1,  3,1,          // Front right face
+		        0,0,  3,1,  4,2,          // Back right face
+		        0,0,  4,1,  2,2,          // Back left face
+		        4,1,  1,4,  2,2,          // Bottom left face
+		        4,1,  3,3,  1,4           // Bottom right face
+		    ); 
 		pyramidMesh.getFaceSmoothingGroups().addAll(
 				1, 2, 3, 4, 5, 5);
 		MeshView pyramid = new MeshView(pyramidMesh);
-		final PhongMaterial sand_dark = new PhongMaterial();
-		sand_dark.setDiffuseMap(new Image("file:mtn.png"));
-		sand_dark.setSpecularColor(Color.WHITE);
-		pyramid.setMaterial(sand_dark);
+		//pyramid.setDrawMode(DrawMode.LINE);
+		final PhongMaterial pyrMaterial = new PhongMaterial();
+		pyrMaterial.setDiffuseMap(mtn1);
+		pyrMaterial.setSpecularColor(Color.WHITE);
+		pyramid.setMaterial(pyrMaterial);
 		pyramid.setTranslateX(-50);
-		pyramid.setTranslateY(-100);
+		pyramid.setTranslateY(-210);
 		pyramid.setTranslateZ(200);
 		root.getChildren().add(pyramid);
-		// pyramid.setDrawMode(DrawMode.LINE);
 		
-		// Define a second size of mountain
+		// Another large mountain of a different texture
+		MeshView pyr2 = new MeshView(pyramidMesh);
+		//pyramid.setDrawMode(DrawMode.LINE);
+		final PhongMaterial py2_map = new PhongMaterial();
+		py2_map.setDiffuseMap(mtn2);
+		py2_map.setSpecularColor(Color.WHITE);
+		pyr2.setMaterial(py2_map);
+		pyr2.setTranslateX(150);
+		pyr2.setTranslateY(-210);
+		pyr2.setTranslateZ(450);
+		root.getChildren().add(pyr2);
 		
-		TriangleMesh mtnMesh = new TriangleMesh();
+		// Define a second, smaller size of a mountain.
+		TriangleMesh smallPyr = new TriangleMesh();
 		// define (a trivial) texture map
-		mtnMesh.getTexCoords().addAll(0, 0);
+		smallPyr.getTexCoords().addAll(
+				0.5f, 0,
+				0, 0.5f,
+				1, 0.5f,
+				0, 1,
+				1, 1
+				);
 		// define vertices
-		float h2 = 50;                    // Height
-		float s2 = 100;                    // Base hypotenuse
-		mtnMesh.getPoints().addAll(
+		float h2 = 80;                    // Height
+		float s2 = 160;                    // Base hypotenuse
+		smallPyr.getPoints().addAll(
 		        0,    0,    0,            // Point 0 - Top
 		        0,    h2,    -s2/2,         // Point 1 - Front
 		        -s2/2, h2,    0,            // Point 2 - Left
@@ -147,31 +183,77 @@ public class CoolCar extends Application {
 		        0,    h2,    s2/2           // Point 4 - Back
 		    );
 		// define faces
-		mtnMesh.getFaces().addAll(
-		        0,0,  2,0,  1,0,          // Front left face
-		        0,0,  1,0,  3,0,          // Front right face
-		        0,0,  3,0,  4,0,          // Back right face
-		        0,0,  4,0,  2,0,          // Back left face
-		        4,0,  1,0,  2,0,          // Bottom left face
-		        4,0,  3,0,  1,0           // Bottom right face
-		    );
-		mtnMesh.getFaceSmoothingGroups().addAll(
+		smallPyr.getFaces().addAll(
+		        0,0,  2,1,  1,2,          // Front left face
+		        0,0,  1,1,  3,1,          // Front right face
+		        0,0,  3,1,  4,2,          // Back right face
+		        0,0,  4,1,  2,2,          // Back left face
+		        4,1,  1,4,  2,2,          // Bottom left face
+		        4,1,  3,3,  1,4           // Bottom right face
+		    ); 
+		smallPyr.getFaceSmoothingGroups().addAll(
 				1, 2, 3, 4, 5, 5);
-		 
-		MeshView small_mtn = new MeshView(mtnMesh);
-		
-		final PhongMaterial sand_light = new PhongMaterial();
-		sand_light.setDiffuseMap(new Image("file:mtn_sand_light.jpg"));
-		sand_light.setSpecularColor(Color.WHITE);
-		small_mtn.setMaterial(sand_light);
-		small_mtn.setTranslateX(100);
-		small_mtn.setTranslateY(-50);
+		MeshView small_mtn = new MeshView(smallPyr);
+		//pyramid.setDrawMode(DrawMode.LINE);
+		final PhongMaterial lightMtn = new PhongMaterial();
+		lightMtn.setDiffuseMap(mtn3);
+		lightMtn.setSpecularColor(Color.WHITE);
+		small_mtn.setMaterial(lightMtn);
+		small_mtn.setTranslateX(200);
+		small_mtn.setTranslateY(-90);
 		small_mtn.setTranslateZ(200);
-		root.getChildren().addAll(small_mtn);
+		root.getChildren().add(small_mtn);
 		
+		// Define another small mountain of a different texture
+		MeshView sml_mtn2 = new MeshView(smallPyr);
+		//pyramid.setDrawMode(DrawMode.LINE);
+		final PhongMaterial rockMat = new PhongMaterial();
+		rockMat.setDiffuseMap(mtn4);
+		rockMat.setSpecularColor(Color.WHITE);
+		sml_mtn2.setMaterial(rockMat);
+		sml_mtn2.setTranslateX(-240);
+		sml_mtn2.setTranslateY(-90);
+		sml_mtn2.setTranslateZ(0);
+		root.getChildren().add(sml_mtn2);
+		
+		ObjView drvr = new ObjView();
+		try {
+			drvr.load(ClassLoader.getSystemResource("chair.obj").toString());
+		} catch (IOException e) {
+			System.out.println("Trouble loading model");
+			e.printStackTrace();
+		}
+		Group droid = drvr.getRoot();
+		droid.setScaleX(70);
+		droid.setScaleY(-70);
+		droid.setScaleZ(-70);
+		droid.setTranslateX(110);
+		droid.setTranslateY(-150);
+		
+		root.getChildren().add(droid);
+		for (Node n:droid.getChildren())
+		{
+			MeshView mv = (MeshView) n;
+			Mesh m = ((MeshView) n).getMesh();
+			//mv.setDrawMode(DrawMode.LINE);
+			System.out.println(n);
+			System.out.println(m);
+			TriangleMesh tm = (TriangleMesh) m;
+			System.out.println("Faces: "+tm.getFaceElementSize());
+			System.out.println(tm.getFaces() );
+			System.out.println(tm.getFaceSmoothingGroups());
+			System.out.println("Normals: "+tm.getNormalElementSize());
+			System.out.println(tm.getNormals());
+			System.out.println("Points: "+tm.getPointElementSize());
+			System.out.println(tm.getPoints());
+			System.out.println("TexCoords: "+tm.getTexCoordElementSize());
+			System.out.println(tm.getTexCoords());
+		}
+		
+		// Add the main platform "xAxis"
 		root.getChildren().addAll(xAxis);
 
-		root.getChildren().addAll(sphere, box);
+		root.getChildren().addAll(sphere, car);
 
 	}
 

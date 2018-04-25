@@ -1,0 +1,11 @@
+#Produced by Art of Illusion 3.0.3, Wed Apr 25 10:25:25 CDT 2018
+newmtl orange
+Kd 1 0.3388 0.13
+Ks 0 0 0
+Ka 0 0 0
+illum 1
+newmtl blue
+Kd 0 0.4 1
+Ks 0 0 0
+Ka 0 0 0
+illum 1
