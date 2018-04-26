@@ -1,5 +1,8 @@
 import java.io.IOException;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
@@ -14,26 +17,30 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial; 
 import javafx.scene.shape.Box;
-import javafx.scene.shape.DrawMode;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * 
  * @author Patrick J. McGee
  * 
  * A 3D rendition of my first 2D assignment.
+ * Loading the car will take a few seconds (and will take up more resources).
  * Pretty sunset included.
- * + Functional, rotating sun.
- * + Working headlights (Press 'H').
- *
+ * + Functional, "breathing" sun in a heliocentric universe.
+ * + Cool car is imported.
+ * 
+ * Assignment 8
+ * 4/25/2018
  */
 public class CoolCar extends Application {
 
+	private static final int FPS = 30;
 	private PerspectiveCamera camera;
 	private Group cameraDolly;
 	private final double cameraQuantity = 10.0;
@@ -47,6 +54,9 @@ public class CoolCar extends Application {
 	private double mouseDeltaX;
 	private double mouseDeltaY;
 	
+	Sphere sphere;
+	
+	// Import all images
 	Image sunset = new Image("file:sunset.jpg");
 	Image mtn1 = new Image("file:red.jpg");
 	Image mtn2 = new Image("file:mtn_sand_light.jpg");
@@ -55,9 +65,16 @@ public class CoolCar extends Application {
 	Image ground = new Image("file:dirt.jpg");
 	Image sun = new Image("file:sun.png");
 	
+	// Set initial values for sun position (which are changed in update()).
+	int sphere_x = 0, sphere_y = -610, sphere_z = 1000;
+	
+	AmbientLight light;
+	
+	// Make the world.
 	private void constructWorld(Group root) {
-		//AmbientLight light = new AmbientLight(Color.WHITE);
-		AmbientLight light = new AmbientLight(Color.rgb(153, 153, 153));
+		
+		// Soft light
+		light = new AmbientLight(Color.rgb(153, 153, 153));
 		root.getChildren().add(light);
 
 		PointLight pl = new PointLight();
@@ -65,26 +82,8 @@ public class CoolCar extends Application {
 		pl.setTranslateY(-100);
 		pl.setTranslateZ(-100);
 		root.getChildren().add(pl);
-
-		final PhongMaterial greenMaterial = new PhongMaterial();
-		greenMaterial.setDiffuseColor(Color.FORESTGREEN);
-		greenMaterial.setSpecularColor(Color.LIMEGREEN);
-		final PhongMaterial yelMaterial = new PhongMaterial();
-		yelMaterial.setDiffuseColor(Color.YELLOW);
-		yelMaterial.setSpecularColor(Color.ORANGE);
-		final PhongMaterial redMaterial = new PhongMaterial();
-		redMaterial.setDiffuseColor(Color.RED);
-		redMaterial.setSpecularColor(Color.TOMATO);
-		final PhongMaterial blueMaterial = new PhongMaterial();
-		blueMaterial.setDiffuseColor(Color.BLUE);
-		blueMaterial.setSpecularColor(Color.WHITE);
-		final PhongMaterial lbrownMat = new PhongMaterial();
-		lbrownMat.setDiffuseColor(Color.rgb(153, 94, 39));
-		lbrownMat.setSpecularColor(Color.rgb(219, 142, 70));
-		final PhongMaterial brownMat = new PhongMaterial();
-		brownMat.setDiffuseColor(Color.rgb(76, 36, 0));
-		brownMat.setSpecularColor(Color.rgb(132, 62, 0));
 		
+		// Box for ground
 		Box xAxis = new Box(1000, 400, 2000);
 		final PhongMaterial gnd = new PhongMaterial();
 		gnd.setDiffuseMap(ground);
@@ -92,23 +91,17 @@ public class CoolCar extends Application {
 		xAxis.setMaterial(gnd);
 		xAxis.setTranslateY(190);
 
-		final Sphere sphere = new Sphere(30);
+		// The Sun.
+		sphere = new Sphere(50);
 		final PhongMaterial sun_mat = new PhongMaterial();
 		sun_mat.setDiffuseMap(sun);
 		sun_mat.setSpecularColor(Color.WHITE);
 		sphere.setMaterial(sun_mat);
-		sphere.setTranslateX(0);
-		sphere.setTranslateY(-210);
-		sphere.setTranslateZ(300);
-
-		Box car = new Box(20, 5, 20);
-		car.setMaterial(redMaterial);
-
-		car.setTranslateX(0);
-		car.setTranslateY(-10);
-		car.setTranslateZ(-600);
+		sphere.setTranslateX(sphere_x);
+		sphere.setTranslateY(sphere_y);
+		sphere.setTranslateZ(sphere_z);
 		
-		// Example from JavaFX for Dummies
+		// Pyramid implementation.
 		TriangleMesh pyramidMesh = new TriangleMesh();
 		// define (a trivial) texture map
 		pyramidMesh.getTexCoords().addAll(
@@ -140,7 +133,6 @@ public class CoolCar extends Application {
 		pyramidMesh.getFaceSmoothingGroups().addAll(
 				1, 2, 3, 4, 5, 5);
 		MeshView pyramid = new MeshView(pyramidMesh);
-		//pyramid.setDrawMode(DrawMode.LINE);
 		final PhongMaterial pyrMaterial = new PhongMaterial();
 		pyrMaterial.setDiffuseMap(mtn1);
 		pyrMaterial.setSpecularColor(Color.WHITE);
@@ -152,7 +144,6 @@ public class CoolCar extends Application {
 		
 		// Another large mountain of a different texture
 		MeshView pyr2 = new MeshView(pyramidMesh);
-		//pyramid.setDrawMode(DrawMode.LINE);
 		final PhongMaterial py2_map = new PhongMaterial();
 		py2_map.setDiffuseMap(mtn2);
 		py2_map.setSpecularColor(Color.WHITE);
@@ -164,7 +155,7 @@ public class CoolCar extends Application {
 		
 		// Define a second, smaller size of a mountain.
 		TriangleMesh smallPyr = new TriangleMesh();
-		// define (a trivial) texture map
+
 		smallPyr.getTexCoords().addAll(
 				0.5f, 0,
 				0, 0.5f,
@@ -172,17 +163,17 @@ public class CoolCar extends Application {
 				0, 1,
 				1, 1
 				);
-		// define vertices
-		float h2 = 80;                    // Height
+		// Vertices
+		float h2 = 80;                     // Height
 		float s2 = 160;                    // Base hypotenuse
 		smallPyr.getPoints().addAll(
-		        0,    0,    0,            // Point 0 - Top
+		        0,    0,    0,              // Point 0 - Top
 		        0,    h2,    -s2/2,         // Point 1 - Front
 		        -s2/2, h2,    0,            // Point 2 - Left
 		        s2/2,  h2,    0,            // Point 3 - Right
 		        0,    h2,    s2/2           // Point 4 - Back
 		    );
-		// define faces
+		// Faces
 		smallPyr.getFaces().addAll(
 		        0,0,  2,1,  1,2,          // Front left face
 		        0,0,  1,1,  3,1,          // Front right face
@@ -194,7 +185,6 @@ public class CoolCar extends Application {
 		smallPyr.getFaceSmoothingGroups().addAll(
 				1, 2, 3, 4, 5, 5);
 		MeshView small_mtn = new MeshView(smallPyr);
-		//pyramid.setDrawMode(DrawMode.LINE);
 		final PhongMaterial lightMtn = new PhongMaterial();
 		lightMtn.setDiffuseMap(mtn3);
 		lightMtn.setSpecularColor(Color.WHITE);
@@ -216,9 +206,10 @@ public class CoolCar extends Application {
 		sml_mtn2.setTranslateZ(0);
 		root.getChildren().add(sml_mtn2);
 		
+		// Bring in the cool car! Thanks to open-source site free3d.com and Art of Illusion.
 		ObjView drvr = new ObjView();
 		try {
-			drvr.load(ClassLoader.getSystemResource("chair.obj").toString());
+			drvr.load(ClassLoader.getSystemResource("porsche1.obj").toString());
 		} catch (IOException e) {
 			System.out.println("Trouble loading model");
 			e.printStackTrace();
@@ -227,15 +218,15 @@ public class CoolCar extends Application {
 		droid.setScaleX(70);
 		droid.setScaleY(-70);
 		droid.setScaleZ(-70);
-		droid.setTranslateX(110);
-		droid.setTranslateY(-150);
+		droid.setTranslateX(0);
+		droid.setTranslateY(-50);
+		droid.setTranslateZ(-600);
 		
 		root.getChildren().add(droid);
 		for (Node n:droid.getChildren())
 		{
 			MeshView mv = (MeshView) n;
 			Mesh m = ((MeshView) n).getMesh();
-			//mv.setDrawMode(DrawMode.LINE);
 			System.out.println(n);
 			System.out.println(m);
 			TriangleMesh tm = (TriangleMesh) m;
@@ -253,8 +244,81 @@ public class CoolCar extends Application {
 		// Add the main platform "xAxis"
 		root.getChildren().addAll(xAxis);
 
-		root.getChildren().addAll(sphere, car);
+		root.getChildren().addAll(sphere);
 
+	}
+	
+	/**
+	 *  Update variables for one time step
+	 */
+	double i = 1;
+	public boolean increase = true;
+	boolean set = true, east, rise, west;
+	int sun_z = -1000;
+	public void update() {
+	
+		// Move sun down and back until it hits lower limit
+		if(set && sphere_y < 100) {
+			sphere.setTranslateY(sphere_y);
+			sphere_y++;
+		}
+		
+		// Bring sun to east if it is down
+		else if(!rise && !east && !west && sphere_y >= 100) {
+			set = false;
+			east = true;
+		}
+		// One-time transport sun to the east for rising.
+		if(east && !set && !rise && !west) {
+	    	sphere.setTranslateZ(sun_z);
+	    	east = false;
+	    	rise = true; 
+		}
+	    
+	    // Sun must return at 0, -610, 1000 (starting point) for one cycle.
+	    if(rise) {
+	    	if(sphere_y > -610) {
+				sphere_y--;
+				sphere.setTranslateY(sphere_y);
+	    	}
+			else if(sphere_y <= 610) {
+		    	rise = false;
+		    	west = true;
+			}
+	    }
+	    
+	    // Sun will move west... long day!
+	    if(west) {
+	    	if(sun_z < 1000) {
+		    	sphere.setTranslateZ(sun_z);
+		    	sun_z++;
+	    	}
+	    	else if(sun_z >= 1000) {
+		    	west = false;
+		    	set = true;			// Set sun in the west again
+		    	sun_z = -1000;		// Reset temporary variable
+	    	}
+	    }
+		
+	    // For breathing animation of the sun
+		if(i < 1.5 && increase) {
+			sphere.setScaleX(i);
+			sphere.setScaleY(i);
+			sphere.setScaleZ(i);
+			i += 0.01;
+			if(i >= 1.5)
+				increase = false;
+		}
+		
+		// Decrease sun scale
+		else if(!increase){
+			sphere.setScaleX(i);
+			sphere.setScaleY(i);
+			sphere.setScaleZ(i);
+			i -= 0.01;
+			if(i <= 1)
+				increase = true;
+		}
 	}
 
 	@Override
@@ -275,9 +339,9 @@ public class CoolCar extends Application {
 		scene.setCamera(camera);
 		// translations through dolly
 		cameraDolly = new Group();
-		cameraDolly.setTranslateZ(-1000);
+		cameraDolly.setTranslateZ(-1000);	// -1000
 		cameraDolly.setTranslateX(0);
-		cameraDolly.setTranslateY(-30);
+		cameraDolly.setTranslateY(-30);	// -30
 		cameraDolly.getChildren().add(camera);
 		sceneRoot.getChildren().add(cameraDolly);
 		// rotation transforms
@@ -337,7 +401,18 @@ public class CoolCar extends Application {
 			xRotate.setAngle(((xRotate.getAngle() + mouseDeltaY * 0.2) % 360 + 540) % 360 - 180); // -
 		});
 
-		primaryStage.setTitle("World1");
+		// Setup and start animation loop (Timeline)
+		KeyFrame kf = new KeyFrame(Duration.millis(1000 / FPS),
+				e -> {
+					// update position
+					update();
+				}
+			);
+		Timeline mainLoop = new Timeline(kf);
+		mainLoop.setCycleCount(Animation.INDEFINITE);
+		mainLoop.play();
+		
+		primaryStage.setTitle("Cool Car!");
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
